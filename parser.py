@@ -1,5 +1,3 @@
-# parser.py
-
 class RecursiveDescentParser:
     def __init__(self, tokens):
         self.tokens = tokens
@@ -71,4 +69,4 @@ class RecursiveDescentParser:
             self.eat("MINUS")
             self.factor()
         else:
-            raise SyntaxError(f"Invalid factor at token: {token}")
+            raise SyntaxError("Invalid factor.")
