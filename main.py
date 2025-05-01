@@ -2,29 +2,15 @@ from lexicalanalyser import Lexer
 from parser import RecursiveDescentParser
 import pprint
 import math
-import re
 
-# Safe eval function to evaluate mathematical expressions
-def safe_eval(exp, variables):
+def safe_eval(exp):
     allowed_names = {
-        "sin": math.sin,
-        "cos": math.cos,
-        "tan": math.tan,
-        "asin": math.asin,
-        "acos": math.acos,
-        "atan": math.atan,
-        "sqrt": math.sqrt,
-        "log": math.log,         # natural log
-        "log10": math.log10,     # base-10 log
-        "exp": math.exp,
-        "pow": pow,
-        "abs": abs,
-        "round": round,
-        "pi": math.pi,
-        "e": math.e,
+        "sin": math.sin, "cos": math.cos, "tan": math.tan,
+        "asin": math.asin, "acos": math.acos, "atan": math.atan,
+        "sqrt": math.sqrt, "log": math.log, "log10": math.log10,
+        "exp": math.exp, "pow": pow, "abs": abs, "round": round,
+        "pi": math.pi, "e": math.e
     }
-
-    allowed_names.update(variables)
     exp = exp.replace("^", "**")
     try:
         result = eval(exp, {"__builtins__": None}, allowed_names)
@@ -33,56 +19,43 @@ def safe_eval(exp, variables):
         print(f"Evaluation error: {e}")
         return None
 
+def get_variable_values(tokens):
+    variables = {tok[0] for tok in tokens if tok[1] == "IDENTIFIER"}
+    values = {}
+    for var in variables:
+        val = input(f"Enter value for {var}: ")
+        try:
+            values[var] = str(float(val))
+        except ValueError:
+            print(f"Invalid input for {var}, defaulting to 0")
+            values[var] = "0"
+    return values
 
-# Extract variable names (simple alphabetic tokens not in math functions)
-def extract_variables(tokens):
-    keywords = {
-        "sin", "cos", "tan", "asin", "acos", "atan", "sqrt", "log",
-        "log10", "exp", "pow", "abs", "round", "pi", "e"
-    }
-    variables = set()
-    for token in tokens:
-        if token['type'] == 'IDENTIFIER':
-            name = token['value']
-            if name not in keywords:
-                variables.add(name)
-    return variables
+def substitute_variables(expr, values):
+    for var, val in values.items():
+        expr = expr.replace(var, val)
+    return expr
 
-
-# Main function
+# Main loop
 running = True
 while running:
     equation = input("Enter an Expression: ")
-    
-    # Lexical analysis
     lexer = Lexer(equation)
     tokens = lexer.lexer()
     print("LEXICAL ANALYSIS OUTPUT:")
     pprint.pprint(tokens)
-    print("\n\n")
+    print("\n")
 
-    # Extract variables and get values
-    var_names = extract_variables(tokens)
-    user_vars = {}
-    for var in var_names:
-        while True:
-            val = input(f"Enter value for '{var}': ")
-            try:
-                user_vars[var] = float(val)
-                break
-            except ValueError:
-                print("Please enter a valid number.")
-
-    # Syntax analysis
     print("SYNTAX ANALYSIS OUTPUT:")
     parser = RecursiveDescentParser(tokens)
-
     if parser.parse():
-        result = safe_eval(equation, user_vars)
+        var_values = get_variable_values(tokens)
+        substituted_equation = substitute_variables(equation, var_values)
+        result = safe_eval(substituted_equation)
         if result is not None:
             print(f"Result = {result}")
 
     user_input = input("Enter Q to STOP | Press Enter to continue: ").strip().lower()
     if user_input == 'q':
         running = False
-        print("\n\nProgram stopped.\n\n")
+        print("\nProgram stopped.\n")
