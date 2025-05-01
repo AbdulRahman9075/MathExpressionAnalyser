@@ -2,10 +2,10 @@ from lexicalanalyser import Lexer
 from parser import RecursiveDescentParser
 import pprint
 import math
+import re
 
 # Safe eval function to evaluate mathematical expressions
-def safe_eval(exp):
-    
+def safe_eval(exp, variables):
     allowed_names = {
         "sin": math.sin,
         "cos": math.cos,
@@ -21,11 +21,12 @@ def safe_eval(exp):
         "abs": abs,
         "round": round,
         "pi": math.pi,
-        "e": math.e
+        "e": math.e,
     }
+
+    allowed_names.update(variables)
     exp = exp.replace("^", "**")
     try:
-        # Evaluate the expression in a safe environment
         result = eval(exp, {"__builtins__": None}, allowed_names)
         return result
     except Exception as e:
@@ -33,10 +34,26 @@ def safe_eval(exp):
         return None
 
 
+# Extract variable names (simple alphabetic tokens not in math functions)
+def extract_variables(tokens):
+    keywords = {
+        "sin", "cos", "tan", "asin", "acos", "atan", "sqrt", "log",
+        "log10", "exp", "pow", "abs", "round", "pi", "e"
+    }
+    variables = set()
+    for token in tokens:
+        if token['type'] == 'IDENTIFIER':
+            name = token['value']
+            if name not in keywords:
+                variables.add(name)
+    return variables
+
+
 # Main function
 running = True
 while running:
     equation = input("Enter an Expression: ")
+    
     # Lexical analysis
     lexer = Lexer(equation)
     tokens = lexer.lexer()
@@ -44,13 +61,24 @@ while running:
     pprint.pprint(tokens)
     print("\n\n")
 
+    # Extract variables and get values
+    var_names = extract_variables(tokens)
+    user_vars = {}
+    for var in var_names:
+        while True:
+            val = input(f"Enter value for '{var}': ")
+            try:
+                user_vars[var] = float(val)
+                break
+            except ValueError:
+                print("Please enter a valid number.")
+
     # Syntax analysis
     print("SYNTAX ANALYSIS OUTPUT:")
     parser = RecursiveDescentParser(tokens)
 
-    # Perform syntax analysis
-    if parser.parse(): 
-        result = safe_eval(equation)
+    if parser.parse():
+        result = safe_eval(equation, user_vars)
         if result is not None:
             print(f"Result = {result}")
 
