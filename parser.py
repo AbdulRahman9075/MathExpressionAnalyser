@@ -1,3 +1,5 @@
+# parser.py
+
 class RecursiveDescentParser:
     def __init__(self, tokens):
         self.tokens = tokens
@@ -43,15 +45,16 @@ class RecursiveDescentParser:
 
     def power(self):
         self.factor()
-        # Handle right-associative power: a ^ b ^ c = a ^ (b ^ c)
         if self.current_token() and self.current_token()[1] == "POWER":
             self.eat("POWER")
-            self.power()  # Recursive call for right-associativity
+            self.power()
 
     def factor(self):
         token = self.current_token()
         if token and token[1] == "NUMBER":
             self.eat("NUMBER")
+        elif token and token[1] == "IDENTIFIER":
+            self.eat("IDENTIFIER")
         elif token and token[1] == "FUNCTION":
             self.eat("FUNCTION")
             self.eat("OPEN_PARENS")
@@ -68,4 +71,4 @@ class RecursiveDescentParser:
             self.eat("MINUS")
             self.factor()
         else:
-            raise SyntaxError("Invalid factor.")
+            raise SyntaxError(f"Invalid factor at token: {token}")
