@@ -2,6 +2,11 @@ from lexicalanalyser import Lexer
 from parser import RecursiveDescentParser
 import pprint
 import math
+import os
+
+
+def clear_screen():
+     os.system('cls' if os.name == 'nt' else 'clear')
 
 def safe_eval(exp):
     allowed_names = {
@@ -16,7 +21,7 @@ def safe_eval(exp):
         result = eval(exp, {"__builtins__": None}, allowed_names)
         return result
     except Exception as e:
-        print(f"Evaluation error: {e}")
+        print(f"\n[!] Evaluation Error: {e}\n")
         return None
 
 def get_variable_values(tokens):
@@ -36,26 +41,45 @@ def substitute_variables(expr, values):
         expr = expr.replace(var, val)
     return expr
 
-# Main loop
-running = True
-while running:
-    equation = input("Enter an Expression: ")
-    lexer = Lexer(equation)
-    tokens = lexer.lexer()
-    print("LEXICAL ANALYSIS OUTPUT:")
-    pprint.pprint(tokens)
-    print("\n")
+def main():
+     clear_screen()
+     print("=" * 60)
+     print("\t\t MATH EXPRESSION ANALYZER.....")
+     print("=" * 60)
+     print("Supported functions: sin, cos, tan, sqrt, log, log10, exp, pi, e, etc.")
+     print("Use '^' for power (e.g., 2^3), it will be auto-converted.")
+     print("=" * 60)
 
-    print("SYNTAX ANALYSIS OUTPUT:")
-    parser = RecursiveDescentParser(tokens)
-    if parser.parse():
-        var_values = get_variable_values(tokens)
-        substituted_equation = substitute_variables(equation, var_values)
-        result = safe_eval(substituted_equation)
-        if result is not None:
-            print(f"Result = {result}")
+     running = True
+     while running:
+        print("\n\n Enter a mathematical expression to evaluate:")
+        equation = input(">>> ")
+        print("\n🔍 LEXICAL ANALYSIS OUTPUT")
+        print("-" * 60)
+        lexer = Lexer(equation)
+        tokens = lexer.lexer()
+    
+        pprint.pprint(tokens)
+        print("\n\n")
 
-    user_input = input("Enter Q to STOP | Press Enter to continue: ").strip().lower()
-    if user_input == 'q':
-        running = False
-        print("\nProgram stopped.\n")
+        print("\n SYNTAX ANALYSIS OUTPUT")
+        print("-" * 60)
+        parser = RecursiveDescentParser(tokens)
+        if parser.parse():
+            var_values = get_variable_values(tokens)
+            substituted_equation = substitute_variables(equation, var_values)
+            result = safe_eval(substituted_equation)
+            if result is not None:
+                print(f"\n Evaluation Result: {result}")
+       
+        else:
+             print("\n Syntax Error in Expression!")
+
+        print("\n" + "-" * 60)
+        user_input = input("Enter [Q] to quit or press [Enter] to try again: ").strip().lower()
+        if user_input == 'q':
+             running = False
+             print("\n Program exited.\n")
+
+if __name__ == "__main__":
+     main()
